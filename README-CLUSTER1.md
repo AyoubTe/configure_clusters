@@ -235,15 +235,15 @@ wsk -i action invoke test-cluster1 --result --param key "value"
 
 ## 📊 Cluster Configuration Summary
 
-| Component | Configuration |
-|-----------|--------------|
-| **Cluster Name** | cluster1-containers |
-| **Container Runtime** | containerd with runc |
-| **CNI Plugin** | Flannel |
-| **Pod CIDR** | 10.244.0.0/16 |
-| **Service CIDR** | 10.96.0.0/12 |
-| **OpenWhisk NodePort** | 31001 |
-| **Kubernetes Version** | 1.28.x |
+| Component              | Configuration        |
+|------------------------|----------------------|
+| **Cluster Name**       | cluster1-containers  |
+| **Container Runtime**  | containerd with runc |
+| **CNI Plugin**         | Flannel              |
+| **Pod CIDR**           | 10.244.0.0/16        |
+| **Service CIDR**       | 10.96.0.0/12         |
+| **OpenWhisk NodePort** | 31001                |
+| **Kubernetes Version** | 1.28.x               |
 
 ### OpenWhisk Configuration
 - **Container Factory**: Docker/containerd (native)

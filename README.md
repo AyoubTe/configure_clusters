@@ -187,16 +187,16 @@ wsk -i action invoke hello-kata --result
 
 ## 📊 Cluster Comparison Table
 
-| Aspect | Cluster 1 (Containers) | Cluster 2 (MicroVM) |
-|--------|----------------------|-------------------|
-| **Isolation** | Kernel namespaces | Hardware (KVM) |
-| **Runtime** | containerd/runc | Kata + Firecracker |
-| **Cold Start** | ~200-500ms | ~500-2000ms |
-| **Memory Overhead** | ~10-20Mi | ~160Mi |
-| **Security** | Process-level | VM-level |
-| **Density** | High | Medium |
-| **API Port** | 31001 | 31002 |
-| **Pod CIDR** | 10.244.0.0/16 | 10.245.0.0/16 |
+| Aspect              | Cluster 1 (Containers) | Cluster 2 (MicroVM) |
+|---------------------|------------------------|---------------------|
+| **Isolation**       | Kernel namespaces      | Hardware (KVM)      |
+| **Runtime**         | containerd/runc        | Kata + Firecracker  |
+| **Cold Start**      | ~200-500ms             | ~500-2000ms         |
+| **Memory Overhead** | ~10-20Mi               | ~160Mi              |
+| **Security**        | Process-level          | VM-level            |
+| **Density**         | High                   | Medium              |
+| **API Port**        | 31001                  | 31002               |
+| **Pod CIDR**        | 10.244.0.0/16          | 10.245.0.0/16       |
 
 ---
 
@@ -376,7 +376,7 @@ sudo journalctl -u containerd -f
 
 **Course**: Projet Long - ENSEEIHT  
 **Team**: Sami Ayoub, Bahou Ayman, Berrada Yassine, Mekkaoui Ossama Moussa, Benkia Mohamed Amine, Hassain Ayoub  
-**Supervisor**: Boris Teabe (boris.teabedjomgwe@enseeiht.fr)  
+**Supervisor**: Boris Teabe
 **Date**: January 2026
 
 ---

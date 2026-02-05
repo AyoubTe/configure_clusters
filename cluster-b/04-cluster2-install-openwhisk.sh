@@ -181,146 +181,61 @@ EOF
 # Step 7: Create custom values file for Cluster 2
 #####################################################################
 create_values_file() {
-    log_info "Creating custom Helm values for Cluster 2 (Kata/MicroVM)..."
-    
+    log_info "Creating optimized Helm values for Cluster 2..."
+    MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+
     cat <<EOF > ~/openwhisk-cluster2-values.yaml
-# OpenWhisk Configuration for Cluster 2 (Kata/Firecracker runtime)
 whisk:
   ingress:
     type: NodePort
-    apiHostName: localhost
+    apiHostName: $MASTER_IP
     apiHostPort: 31002
 
-  # Resource limits for functions
-  limits:
-    actionsInvokesPerminute: 60
-    actionsInvokesConcurrent: 30
-    triggersFiresPerminute: 60
-    actionsSequenceMaxlength: 50
-    actions:
-      time:
-        min: 100ms
-        max: 5m
-        std: 1m
-      memory:
-        min: 128m
-        max: 512m
-        std: 256m
-      concurrency:
-        min: 1
-        max: 1
-        std: 1
-      log:
-        min: 0m
-        max: 10m
-        std: 10m
-
-# Invoker configuration - using Kubernetes with Kata runtime
 invoker:
   containerFactory:
     impl: "kubernetes"
-    kubernetes:
-      isolateUserActions: true
-      
-  # Additional options for Kata
-  options: "-Dwhisk.kubernetes.pod-template.runtime-class-name=kata-fc"
   
-  # Resource allocation for invokers (higher for Kata overhead)
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "1000m"
-    limits:
-      memory: "4Gi"
-      cpu: "3000m"
+  # SOLUTION DU PROBLÈME KATA :
+  # On définit le template ici. Helm va créer le fichier et configurer l'invoker correctement.
+  podTemplate: |
+    spec:
+      runtimeClassName: kata-fc
 
-# Controller configuration
-controller:
-  replicaCount: 1
+  # Ressources strictes pour 2 vCPUs
   resources:
     requests:
       memory: "512Mi"
       cpu: "500m"
     limits:
-      memory: "1Gi"
-      cpu: "1000m"
+      memory: "2Gi"
+      cpu: "2000m"
 
-# Nginx configuration
+# Désactiver la persistance
+k8s:
+  persistence:
+    enabled: false
+
 nginx:
   httpsNodePort: 31002
 
-# Database configuration (CouchDB)
-db:
-  wipeAndInit: true
-  auth:
-    username: whisk_admin
-    password: some_passw0rd
-
-# Redis for throttling
-redis:
-  persistence:
-    enabled: false
-
-# Kafka configuration
-kafka:
-  replicaCount: 1
-  persistence:
-    enabled: false
-
-# Zookeeper
-zookeeper:
-  replicaCount: 1
-  persistence:
-    enabled: false
-
-# Affinity rules - deploy invokers on Kata-enabled nodes
-affinity:
-  enabled: true
-  invokerNodeLabel: openwhisk-role
-  invokerNodeValue: invoker
-
-# Additional node affinity for Kata nodes
-invoker:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: katacontainers.io/kata-runtime
-            operator: In
-            values:
-            - "true"
-
-# Metrics and monitoring
 metrics:
   prometheusEnabled: false
-  userMetricsEnabled: true
-
-# Container pool configuration for Kata
-containerPool:
-  userMemory: "2048m"
-  
-# Kata-specific: Longer timeout for cold starts
-controller:
-  loglevel: "INFO"
+  userMetricsEnabled: false
 EOF
-
-    log_info "Values file created at ~/openwhisk-cluster2-values.yaml"
 }
 
 #####################################################################
 # Step 8: Deploy OpenWhisk using Helm
 #####################################################################
 deploy_openwhisk() {
-    log_info "Deploying OpenWhisk to Cluster 2 with Kata runtime..."
-    log_info "This may take 5-10 minutes..."
+    log_info "Cleaning up previous failed installation..."
+    helm uninstall ${HELM_RELEASE_NAME} -n ${OPENWHISK_NAMESPACE} || true
     
+    log_info "Deploying OpenWhisk to Cluster 2 with Kata runtime..."
     helm install ${HELM_RELEASE_NAME} openwhisk/openwhisk \
         --namespace ${OPENWHISK_NAMESPACE} \
         --values ~/openwhisk-cluster2-values.yaml \
         --timeout 15m
-    
-    log_info "OpenWhisk deployment initiated"
 }
 
 #####################################################################
@@ -451,12 +366,17 @@ EOF
     log_info "Invoke with: wsk -i action invoke hello-kata --result --param name YourName"
 }
 
+wait_for_openwhisk() {
+    log_info "Waiting for OpenWhisk pods (Kata/Firecracker boot is slower)..."
+    # Attend que l'installateur de packages soit terminé
+    kubectl wait --for=condition=ready pod -l name=openwhisk-install-packages -n openwhisk --timeout=600s || log_warn "Timeout reached"
+}
+
 #####################################################################
 # Main execution
 #####################################################################
 main() {
     log_info "Starting OpenWhisk deployment for CLUSTER 2 (MicroVM/Kata)..."
-    echo ""
     
     verify_cluster
     install_helm
@@ -465,13 +385,13 @@ main() {
     add_helm_repo
     create_kata_invoker_config
     create_values_file
-    deploy_openwhisk
-    wait_for_openwhisk
-    install_wsk_cli
-    configure_wsk_cli
-    display_status
-    verify_kata_usage
-    create_test_action
+    deploy_openwhisk      # 1. Déployer
+
+    install_wsk_cli       # Installe le binaire 'wsk'
+    wait_for_openwhisk    # Attend que les MicroVMs bootent
+    configure_wsk_cli     # Lie le CLI au Cluster 2
+    display_status        # Affiche le récapitulatif
+    create_test_action    # Crée l'action hello-kata
     
     echo ""
     log_info "✓ OpenWhisk deployment on CLUSTER 2 completed!"

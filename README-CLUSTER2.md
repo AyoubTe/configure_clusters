@@ -361,17 +361,17 @@ wsk -i action invoke isolation-test --result
 
 ## 📊 Cluster Configuration Summary
 
-| Component | Configuration |
-|-----------|--------------|
-| **Cluster Name** | cluster2-microvm |
-| **Container Runtime** | containerd + Kata Containers |
-| **Hypervisor** | Firecracker v1.6.0 |
-| **RuntimeClass** | kata-fc |
-| **CNI Plugin** | Flannel |
-| **Pod CIDR** | 10.245.0.0/16 |
-| **Service CIDR** | 10.97.0.0/12 |
-| **OpenWhisk NodePort** | 31002 |
-| **Kubernetes Version** | 1.28.x |
+| Component              | Configuration                |
+|------------------------|------------------------------|
+| **Cluster Name**       | cluster2-microvm             |
+| **Container Runtime**  | containerd + Kata Containers |
+| **Hypervisor**         | Firecracker v1.6.0           |
+| **RuntimeClass**       | kata-fc                      |
+| **CNI Plugin**         | Flannel                      |
+| **Pod CIDR**           | 10.245.0.0/16                |
+| **Service CIDR**       | 10.97.0.0/12                 |
+| **OpenWhisk NodePort** | 31002                        |
+| **Kubernetes Version** | 1.28.x                       |
 
 ### OpenWhisk Configuration
 - **Container Factory**: Kubernetes with Kata runtime

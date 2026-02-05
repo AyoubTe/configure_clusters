@@ -6,20 +6,20 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        YOUR 10 VMs - PHYSICAL LAYER                          │
+│                        YOUR 10 VMs - PHYSICAL LAYER                         │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
                      ┌────────────────┴────────────────┐
                      │                                 │
-         ┌───────────▼─────────────┐      ┌───────────▼─────────────┐
-         │     CLUSTER 1            │      │     CLUSTER 2            │
-         │  (Traditional)           │      │    (MicroVM)             │
-         │  5 VMs                   │      │  5 VMs                   │
+         ┌───────────▼──────────────┐      ┌───────────▼──────────────┐
+         │       CLUSTER 1          │      │       CLUSTER 2          │
+         │     (Traditional)        │      │        (MicroVM)         │
+         │         5 VM             │      │          5 VMs           │
          │  ┌─────────────────────┐ │      │  ┌─────────────────────┐ │
          │  │   Master Node       │ │      │  │   Master Node       │ │
          │  │   + 4 Workers       │ │      │  │   + 4 Workers       │ │
          │  └─────────────────────┘ │      │  └─────────────────────┘ │
-         └─────────────────────────┘      └─────────────────────────┘
+         └──────────────────────────┘      └──────────────────────────┘
 ```
 
 ---
@@ -28,10 +28,10 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                         CLUSTER 1                                 │
-│                    (VM + Container Stack)                         │
+│                         CLUSTER 1                                │
+│                    (VM + Container Stack)                        │
 ├──────────────────────────────────────────────────────────────────┤
-│                                                                   │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                    MASTER NODE                             │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
@@ -46,7 +46,7 @@
 │  │  │  • Kafka           • Nginx                           │  │  │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
-│                                                                   │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                    WORKER NODE 1-4                         │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
@@ -60,18 +60,18 @@
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
 │  │  │         OpenWhisk Invoker                            │  │  │
-│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐           │  │  │
-│  │  │  │Container │  │Container │  │Container │           │  │  │
-│  │  │  │Function 1│  │Function 2│  │Function 3│  ...      │  │  │
-│  │  │  └──────────┘  └──────────┘  └──────────┘           │  │  │
-│  │  │  (Shared Linux Kernel - Namespace Isolation)        │  │  │
+│  │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐            │  │  │
+│  │  │  │Container │  │Container │  │Container │            │  │  │
+│  │  │  │Function 1│  │Function 2│  │Function 3│  ...       │  │  │
+│  │  │  └──────────┘  └──────────┘  └──────────┘            │  │  │
+│  │  │  (Shared Linux Kernel - Namespace Isolation)         │  │  │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
-│                                                                   │
+│                                                                  │
 │  Characteristics:                                                │
-│  ✓ Fast container startup (~200-500ms)                          │
-│  ✓ Low memory overhead (~10-20Mi per container)                 │
-│  ✓ Process-level isolation (shared kernel)                      │
+│  ✓ Fast container startup (~200-500ms)                           │
+│  ✓ Low memory overhead (~10-20Mi per container)                  │
+│  ✓ Process-level isolation (shared kernel)                       │
 │  ✓ High density                                                  │
 │  ⚠ Weaker security boundary                                      │
 └──────────────────────────────────────────────────────────────────┘
@@ -83,10 +83,10 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                         CLUSTER 2                                 │
-│                  (VM + MicroVM/Kata Stack)                        │
+│                         CLUSTER 2                                │
+│                  (VM + MicroVM/Kata Stack)                       │
 ├──────────────────────────────────────────────────────────────────┤
-│                                                                   │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                    MASTER NODE                             │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
@@ -102,7 +102,7 @@
 │  │  │  • Kafka           • Nginx                           │  │  │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
-│                                                                   │
+│                                                                  │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                    WORKER NODE 1-4                         │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
@@ -123,28 +123,28 @@
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  │  ┌──────────────────────────────────────────────────────┐  │  │
 │  │  │         OpenWhisk Invoker                            │  │  │
-│  │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │  │  │
-│  │  │  │  MicroVM 1  │  │  MicroVM 2  │  │  MicroVM 3  │  │  │  │
-│  │  │  │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │  │  │  │
-│  │  │  │ │Minimal  │ │  │ │Minimal  │ │  │ │Minimal  │ │  │  │  │
-│  │  │  │ │Kernel   │ │  │ │Kernel   │ │  │ │Kernel   │ │  │  │  │
-│  │  │  │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │  │  │  │
-│  │  │  │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │  │  │  │
-│  │  │  │ │Function │ │  │ │Function │ │  │ │Function │ │  │  │  │
-│  │  │  │ │    1    │ │  │ │    2    │ │  │ │    3    │ │ ...│  │
-│  │  │  │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │  │  │  │
-│  │  │  └─────────────┘  └─────────────┘  └─────────────┘  │  │  │
-│  │  │  (Hardware-level VM Isolation via KVM)              │  │  │
+│  │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │  │  │
+│  │  │  │  MicroVM 1  │  │  MicroVM 2  │  │  MicroVM 3  │   │  │  │
+│  │  │  │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │   │  │  │
+│  │  │  │ │Minimal  │ │  │ │Minimal  │ │  │ │Minimal  │ │   │  │  │
+│  │  │  │ │Kernel   │ │  │ │Kernel   │ │  │ │Kernel   │ │   │  │  │
+│  │  │  │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │   │  │  │
+│  │  │  │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │   │  │  │
+│  │  │  │ │Function │ │  │ │Function │ │  │ │Function │ │   │  │  │
+│  │  │  │ │    1    │ │  │ │    2    │ │  │ │    3    │ │...│  │  │
+│  │  │  │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │   │  │  │
+│  │  │  └─────────────┘  └─────────────┘  └─────────────┘   │  │  │
+│  │  │  (Hardware-level VM Isolation via KVM)               │  │  │
 │  │  └──────────────────────────────────────────────────────┘  │  │
 │  └────────────────────────────────────────────────────────────┘  │
-│                                                                   │
+│                                                                  │
 │  Characteristics:                                                │
-│  ✓ Strong VM-level isolation (KVM)                              │
-│  ✓ Fast MicroVM startup (~500-2000ms)                           │
-│  ✓ Minimal kernel (security surface reduced)                    │
-│  ⚠ Higher memory overhead (~160Mi per MicroVM)                  │
-│  ⚠ More CPU overhead (virtualization)                           │
-│  ⚠ Lower density than containers                                │
+│  ✓ Strong VM-level isolation (KVM)                               │
+│  ✓ Fast MicroVM startup (~500-2000ms)                            │
+│  ✓ Minimal kernel (security surface reduced)                     │
+│  ⚠ Higher memory overhead (~160Mi per MicroVM)                   │
+│  ⚠ More CPU overhead (virtualization)                            │
+│  ⚠ Lower density than containers                                 │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -155,17 +155,17 @@
 ### Stack Layers Comparison
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────────────┐
 │                    CLUSTER 1                │    CLUSTER 2        │
 ├─────────────────────────────────────────────┼─────────────────────┤
 │                                             │                     │
 │  User Function Code                         │  User Function Code │
 │         ↓                                   │         ↓           │
-│  Runtime (Node/Python/Java)                 │  Runtime (Node/...)  │
+│  Runtime (Node/Python/Java)                 │  Runtime (Node/...) │
 │         ↓                                   │         ↓           │
 │  Container (runc)                           │  Minimal Guest OS   │
 │         ↓                                   │         ↓           │
-│  containerd                                 │  MicroVM (Firecracker)│
+│  containerd                                 │MicroVM (Firecracker)│
 │         ↓                                   │         ↓           │
 │  Kubelet                                    │  Kata Runtime       │
 │         ↓                                   │         ↓           │
@@ -284,35 +284,35 @@ Energy Consumption Over Time
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    MEASUREMENT LAYERS                         │
+│                    MEASUREMENT LAYERS                        │
 ├──────────────────────────────────────────────────────────────┤
-│                                                               │
+│                                                              │
 │  1. Hardware Level (RAPL)                                    │
 │     • CPU Package energy                                     │
 │     • DRAM energy                                            │
 │     • Total node consumption                                 │
-│     ↓                                                         │
+│     ↓                                                        │
 │  2. Kubernetes Level (Kepler)                                │
 │     • Per-pod energy attribution                             │
 │     • Control plane consumption                              │
 │     • Worker node consumption                                │
-│     ↓                                                         │
+│     ↓                                                        │
 │  3. OpenWhisk Level                                          │
 │     • Controller overhead                                    │
 │     • Invoker consumption                                    │
 │     • Database/Kafka overhead                                │
-│     ↓                                                         │
+│     ↓                                                        │
 │  4. Function Level                                           │
 │     • Cold start energy                                      │
 │     • Warm execution energy                                  │
 │     • Idle/warm-container energy                             │
-│     ↓                                                         │
+│     ↓                                                        │
 │  5. Application Level                                        │
 │     • Actual function code execution                         │
 │     • Runtime overhead                                       │
-│                                                               │
+│                                                              │
 │  Goal: Calculate sPUE = E_total / E_function                 │
-│                                                               │
+│                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -322,16 +322,16 @@ Energy Consumption Over Time
 
 ### Hypothesis Summary
 
-| Metric | Cluster 1 (Baseline) | Cluster 2 (MicroVM) | Expected Difference |
-|--------|---------------------|---------------------|-------------------|
-| **Idle Power** | Higher (Guest OS) | Lower (no VMs) | 30-50% reduction |
-| **Cold Start Energy** | Baseline | Higher | 40-60% increase |
-| **Cold Start Time** | 200-500ms | 500-2000ms | 2-5x slower |
-| **Warm Exec Energy** | Baseline | Similar | ±10% |
-| **Memory/Function** | ~20Mi | ~160Mi | 8x increase |
-| **Max Density** | High | Medium | ~50% of Cluster 1 |
-| **Security** | Process-level | Hardware-level | ✓ Stronger |
-| **sPUE** | ? | ? | To be measured! |
+| Metric                | Cluster 1 (Baseline) | Cluster 2 (MicroVM) | Expected Difference |
+|-----------------------|----------------------|---------------------|---------------------|
+| **Idle Power**        | Higher (Guest OS)    | Lower (no VMs)      | 30-50% reduction    |
+| **Cold Start Energy** | Baseline             | Higher              | 40-60% increase     |
+| **Cold Start Time**   | 200-500ms            | 500-2000ms          | 2-5x slower         |
+| **Warm Exec Energy**  | Baseline             | Similar             | ±10%                |
+| **Memory/Function**   | ~20Mi                | ~160Mi              | 8x increase         |
+| **Max Density**       | High                 | Medium              | ~50% of Cluster 1   |
+| **Security**          | Process-level        | Hardware-level      | ✓ Stronger          |
+| **sPUE**              | ?                    | ?                   | To be measured!     |
 
 ---
 
@@ -339,53 +339,53 @@ Energy Consumption Over Time
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│                    EXPERIMENT PIPELINE                          │
+│                    EXPERIMENT PIPELINE                         │
 ├────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  STEP 1: Deploy Infrastructure                                │
-│  ├── Deploy Cluster 1 (Containers)                            │
-│  └── Deploy Cluster 2 (MicroVM)                               │
-│          ↓                                                      │
-│  STEP 2: Instrument Monitoring                                │
-│  ├── Install Kepler on both clusters                          │
-│  ├── Configure RAPL measurements                              │
-│  └── Setup data collection pipeline                           │
-│          ↓                                                      │
-│  STEP 3: Scenario 1 - Idle Baseline                          │
-│  ├── Let both clusters idle for 1 hour                        │
-│  ├── Measure E_idle for each                                  │
-│  └── Compare infrastructure overhead                          │
-│          ↓                                                      │
-│  STEP 4: Scenario 2 - Cold Start                             │
-│  ├── Create functions: small, medium, large                   │
-│  ├── Invoke 100x with keep-alive=0                           │
-│  ├── Measure time and energy per cold start                   │
+│                                                                │
+│  STEP 1: Deploy Infrastructure                                 │
+│  ├── Deploy Cluster 1 (Containers)                             │
+│  └── Deploy Cluster 2 (MicroVM)                                │
+│          ↓                                                     │
+│  STEP 2: Instrument Monitoring                                 │
+│  ├── Install Kepler on both clusters                           │
+│  ├── Configure RAPL measurements                               │
+│  └── Setup data collection pipeline                            │
+│          ↓                                                     │
+│  STEP 3: Scenario 1 - Idle Baseline                            │
+│  ├── Let both clusters idle for 1 hour                         │
+│  ├── Measure E_idle for each                                   │
+│  └── Compare infrastructure overhead                           │
+│          ↓                                                     │
+│  STEP 4: Scenario 2 - Cold Start                               │
+│  ├── Create functions: small, medium, large                    │
+│  ├── Invoke 100x with keep-alive=0                             │
+│  ├── Measure time and energy per cold start                    │
 │  └── Compare clusters                                          │
-│          ↓                                                      │
-│  STEP 5: Scenario 3 - Warm Execution                         │
-│  ├── Keep-alive=10min                                         │
-│  ├── Invoke 1000x rapidly (warm starts)                       │
-│  ├── Measure steady-state energy                              │
+│          ↓                                                     │
+│  STEP 5: Scenario 3 - Warm Execution                           │
+│  ├── Keep-alive=10min                                          │
+│  ├── Invoke 1000x rapidly (warm starts)                        │
+│  ├── Measure steady-state energy                               │
 │  └── Compare efficiency                                        │
-│          ↓                                                      │
-│  STEP 6: Scenario 4 - Mixed Load                             │
-│  ├── Generate Poisson traffic                                 │
-│  ├── Rates: 10, 50, 100, 500, 1000 inv/min                   │
-│  ├── 30 min per rate                                          │
-│  └── Measure total energy and response times                  │
-│          ↓                                                      │
-│  STEP 7: Scenario 5 - Keep-Alive Optimization                │
-│  ├── Test timeouts: 0s, 10s, 60s, 600s                       │
-│  ├── Constant load: 100 inv/min                               │
-│  ├── 20 min per config                                        │
-│  └── Find optimal timeout for each cluster                    │
-│          ↓                                                      │
-│  STEP 8: Analysis                                             │
-│  ├── Calculate sPUE for each scenario                         │
-│  ├── Generate comparison charts                               │
-│  ├── Statistical analysis (t-tests, ANOVA)                    │
+│          ↓                                                     │
+│  STEP 6: Scenario 4 - Mixed Load                               │
+│  ├── Generate Poisson traffic                                  │
+│  ├── Rates: 10, 50, 100, 500, 1000 inv/min                     │
+│  ├── 30 min per rate                                           │
+│  └── Measure total energy and response times                   │
+│          ↓                                                     │
+│  STEP 7: Scenario 5 - Keep-Alive Optimization                  │
+│  ├── Test timeouts: 0s, 10s, 60s, 600s                         │
+│  ├── Constant load: 100 inv/min                                │
+│  ├── 20 min per config                                         │
+│  └── Find optimal timeout for each cluster                     │
+│          ↓                                                     │
+│  STEP 8: Analysis                                              │
+│  ├── Calculate sPUE for each scenario                          │
+│  ├── Generate comparison charts                                │
+│  ├── Statistical analysis (t-tests, ANOVA)                     │
 │  └── Draw conclusions                                          │
-│                                                                 │
+│                                                                │
 └────────────────────────────────────────────────────────────────┘
 ```
 

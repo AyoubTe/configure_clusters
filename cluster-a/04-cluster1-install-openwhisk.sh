@@ -3,7 +3,6 @@
 # OpenWhisk Installation Script - CLUSTER 1 (Containers)
 # Purpose: Deploy Apache OpenWhisk on Kubernetes with Docker runtime
 # Usage: Run on MASTER node of Cluster 1 after all workers joined
-#####################################################################
 
 set -e
 
@@ -106,51 +105,25 @@ add_helm_repo() {
 }
 
 #####################################################################
-# Step 6: Create custom values file for Cluster 1
+# Step 6: Create custom values file (CRITICAL UPDATES)
 #####################################################################
 create_values_file() {
-    log_info "Creating custom Helm values for Cluster 1..."
+    log_info "Creating optimized Helm values for Cluster 1..."
     
+    # Récupération dynamique de l'IP du Master pour l'API Host
+    MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+
     cat <<EOF > ~/openwhisk-cluster1-values.yaml
-# OpenWhisk Configuration for Cluster 1 (Docker/containerd runtime)
 whisk:
   ingress:
     type: NodePort
-    apiHostName: localhost
+    apiHostName: $MASTER_IP
     apiHostPort: 31001
 
-  # Resource limits for functions
-  limits:
-    actionsInvokesPerminute: 60
-    actionsInvokesConcurrent: 30
-    triggersFiresPerminute: 60
-    actionsSequenceMaxlength: 50
-    actions:
-      time:
-        min: 100ms
-        max: 5m
-        std: 1m
-      memory:
-        min: 128m
-        max: 512m
-        std: 256m
-      concurrency:
-        min: 1
-        max: 1
-        std: 1
-      log:
-        min: 0m
-        max: 10m
-        std: 10m
-
-# Invoker configuration - using Docker/containerd
+# Configuration de l'Invoker (Utilisation du runtime Kubernetes natif)
 invoker:
   containerFactory:
-    impl: "docker"
-    enableConcurrency: false
-  options: ""
-  
-  # Resource allocation for invokers
+    impl: "kubernetes" # Plus stable que "docker" sur les versions récentes de K8s
   resources:
     requests:
       memory: "512Mi"
@@ -159,59 +132,25 @@ invoker:
       memory: "2Gi"
       cpu: "2000m"
 
-# Controller configuration
-controller:
-  replicaCount: 1
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "500m"
-    limits:
-      memory: "1Gi"
-      cpu: "1000m"
+# Persistence (Activée pour un vrai cluster avec stockage)
+k8s:
+  persistence:
+    enabled: true # Activé pour la production
 
-# Nginx configuration
-nginx:
-  httpsNodePort: 31001
-
-# Database configuration (CouchDB)
+# Base de données
 db:
   wipeAndInit: true
   auth:
     username: whisk_admin
     password: some_passw0rd
 
-# Redis for throttling
-redis:
-  persistence:
-    enabled: false
+# Configuration Nginx
+nginx:
+  httpsNodePort: 31001
 
-# Kafka configuration
-kafka:
-  replicaCount: 1
-  persistence:
-    enabled: false
-
-# Zookeeper
-zookeeper:
-  replicaCount: 1
-  persistence:
-    enabled: false
-
-# Affinity rules - deploy invokers on labeled worker nodes
-affinity:
-  enabled: true
-  invokerNodeLabel: openwhisk-role
-  invokerNodeValue: invoker
-
-# Metrics and monitoring
-metrics:
-  prometheusEnabled: false
-  userMetricsEnabled: true
-
-# Enable container pool prewarming
+# Pool de conteneurs (Pré-chargement pour réduire le cold start)
 containerPool:
-  userMemory: "2048m"
+  userMemory: "4096m" # Augmenté pour de meilleures performances
 EOF
 
     log_info "Values file created at ~/openwhisk-cluster1-values.yaml"
@@ -222,14 +161,10 @@ EOF
 #####################################################################
 deploy_openwhisk() {
     log_info "Deploying OpenWhisk to Cluster 1..."
-    log_info "This may take 5-10 minutes..."
-    
-    helm install ${HELM_RELEASE_NAME} openwhisk/openwhisk \
-        --namespace ${OPENWHISK_NAMESPACE} \
+    helm install openwhisk openwhisk/openwhisk \
+        --namespace openwhisk \
         --values ~/openwhisk-cluster1-values.yaml \
-        --timeout 10m
-    
-    log_info "OpenWhisk deployment initiated"
+        --timeout 15m
 }
 
 #####################################################################
@@ -288,27 +223,11 @@ install_wsk_cli() {
 #####################################################################
 configure_wsk_cli() {
     log_info "Configuring wsk CLI..."
+    MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
     
-    # Get NodePort
-    NODE_PORT=$(kubectl get svc -n ${OPENWHISK_NAMESPACE} owdev-nginx -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
-    
-    # Get any worker node IP
-    NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-    
-    # Configure wsk
-    wsk property set --apihost ${NODE_IP}:${NODE_PORT}
+    # Configuration avec la clé d'authentification standard du projet
+    wsk property set --apihost ${MASTER_IP}:31001
     wsk property set --auth 23bc46b1-71f6-4ed5-8c54-816aa4f8c502:123zO3xZCLrMN6v2BKK1dXYFpXlPkccOFqm12CdAsMgRU4VrNZ9lyGVCGuMDGIwP
-    wsk property set --namespace guest
-    
-    # Test configuration
-    log_info "Testing wsk configuration..."
-    wsk -i list || log_warn "wsk test failed (this may be normal during initialization)"
-    
-    echo ""
-    log_info "wsk CLI configured:"
-    log_info "  API Host: ${NODE_IP}:${NODE_PORT}"
-    log_info "  Auth: 23bc46b1-71f6-4ed5-8c54-816aa4f8c502:***"
-    log_info "  Namespace: guest"
 }
 
 #####################################################################
