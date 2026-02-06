@@ -231,8 +231,18 @@ deploy_openwhisk() {
     log_info "Cleaning up previous failed installation..."
     helm uninstall ${HELM_RELEASE_NAME} -n ${OPENWHISK_NAMESPACE} || true
     
+    # Download chart locally
+    CHART_URL="https://github.com/apache/openwhisk-deploy-kube/releases/download/1.0.0/openwhisk-1.0.0.tgz"
+    CHART_FILE="openwhisk-1.0.0.tgz"
+    
+    if [ ! -f "$CHART_FILE" ]; then
+        log_info "Downloading OpenWhisk chart manually..."
+        wget -q --show-progress "$CHART_URL" || curl -L -O "$CHART_URL"
+    fi
+
     log_info "Deploying OpenWhisk to Cluster 2 with Kata runtime..."
-    helm install ${HELM_RELEASE_NAME} openwhisk/openwhisk \
+    # Uses local ./$CHART_FILE instead of remote repo
+    helm install ${HELM_RELEASE_NAME} "./$CHART_FILE" \
         --namespace ${OPENWHISK_NAMESPACE} \
         --values ~/openwhisk-cluster2-values.yaml \
         --timeout 15m
@@ -295,21 +305,49 @@ install_wsk_cli() {
 configure_wsk_cli() {
     log_info "Configuring wsk CLI..."
     
-    NODE_PORT=$(kubectl get svc -n ${OPENWHISK_NAMESPACE} owdev-nginx -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
-    NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-    
-    wsk property set --apihost ${NODE_IP}:${NODE_PORT}
-    wsk property set --auth 23bc46b1-71f6-4ed5-8c54-816aa4f8c502:123zO3xZCLrMN6v2BKK1dXYFpXlPkccOFqm12CdAsMgRU4VrNZ9lyGVCGuMDGIwP
-    wsk property set --namespace guest
-    
-    log_info "Testing wsk configuration..."
-    wsk -i list || log_warn "wsk test failed (may be normal during initialization)"
-    
+    # 1. Attente de sécurité pour le service
+    log_info "Waiting for openwhisk-nginx service..."
+    until kubectl get svc -n ${OPENWHISK_NAMESPACE} openwhisk-nginx > /dev/null 2>&1; do
+        sleep 5
+        echo -ne "."
+    done
     echo ""
-    log_info "wsk CLI configured:"
-    log_info "  API Host: ${NODE_IP}:${NODE_PORT}"
-    log_info "  Auth: 23bc46b1-71f6-4ed5-8c54-816aa4f8c502:***"
-    log_info "  Namespace: guest"
+
+    # 2. Configuration AUTOMATIQUE (Avec vos paramètres forcés)
+    # Récupération IP Master (comme votre commande manuelle)
+    MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+    PORT_FORCE="31002"
+    AUTH_KEY="23bc46b1-71f6-4ed5-8c54-816aa4f8c502:123zO3xZCLrMN6v2BKK1dXYFpXlPkccOFqm12CdAsMgRU4VrNZ9lyGVCGuMDGIwP"
+
+    log_info "Setting API Host to $MASTER_IP:$PORT_FORCE..."
+    wsk property set --apihost "$MASTER_IP:$PORT_FORCE"
+    
+    log_info "Setting Auth Key..."
+    wsk property set --auth "$AUTH_KEY"
+    
+    log_info "Setting Namespace..."
+    # '|| true' évite que le script plante si le flag --namespace bug
+    wsk property set --namespace guest || true 
+
+    # 3. Vérification et Fallback (Instructions manuelles)
+    echo ""
+    log_info "Testing connection..."
+    
+    # On teste si la liste fonctionne. Si échec, on affiche les commandes manuelles.
+    if wsk -i list > /dev/null 2>&1; then
+        log_info "✓ WSK CLI configured and connected successfully!"
+    else
+        log_warn "Automatic configuration verification failed (Controller might still be booting)."
+        echo ""
+        echo -e "${YELLOW}--- COMMANDES MANUELLES DE SECOURS (Copiez-Collez ceci si besoin) ---${NC}"
+        echo "MASTER_IP=\$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"InternalIP\")].address}')"
+        echo "wsk property set --apihost \$MASTER_IP:$PORT_FORCE"
+        echo "wsk property set --auth $AUTH_KEY"
+        echo "wsk property set --namespace guest"
+        echo "wsk -i list"
+        echo -e "${YELLOW}--------------------------------------------------------------------${NC}"
+        echo ""
+    fi
 }
 
 #####################################################################
